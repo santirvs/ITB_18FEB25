@@ -1,0 +1,47 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class Client {
+    -- atributs --
+    - codi: Int
+    - nom: String
+    - cognoms: String
+    - diaNaixement: Int
+    - mesNaixement: Int
+    - anyNaixement: Int
+    - adrecaPostal: String
+    - eMail: String
+    - esVIP: Boolean
+    -- mètodes --
+    + Client(f: Fichero)
+}
+
+
+class Fichero {
+    - fr : FileReader?
+    - br : BufferedReader? 
+    - fw : FileWriter? 
+    - pw : PrintWriter? 
+    - fos : FileOutputStream? 
+    - dos : DataOutputStream? 
+    - fis : FileInputStream?
+    - dis : DataInputStream?
+    }
+
+interface IGuardable {
+    + guardar(f:Fichero)
+    + leer(f:Fichero)
+    }
+
+interface Cloneable {
+    + clone():Any
+}
+
+IGuardable <|.. Client
+Cloneable <|.. Client
+
+
+Client *-right- Fichero
+
+
+@enduml

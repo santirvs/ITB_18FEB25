@@ -1,100 +1,175 @@
-import models.Client
-import models.FicheroClientes
+import models.*
 import java.io.File
 import java.util.*
 
-val FILE_TXT = "FicheroClientes.txt"
-val FILE_BIN = "FicheroClientes.dat"
-val FILE_TXT2 = "./FicheroClientes2.txt"
-val FILE_BIN2 = "FicheroClientes2.dat"
+const val FILE_TXT = "FicheroClientes.txt"
+const val FILE_BIN = "FicheroClientes.dat"
+const val FILE_TXT2 = "FicheroClientes2.txt"
+const val FILE_BIN2 = "FicheroClientes2.dat"
+
+const val FILE= FILE_BIN
+const val FILE2= FILE_BIN2
+
+const val esBinari = true
 
 fun main() {
 
-    var scan : Scanner = Scanner(System.`in`)
-    var f: FicheroClientes = FicheroClientes(FILE_BIN ,true)
+    var opcio = menuClients()
+    while (opcio!=0) {
+        when (opcio) {
+            1 -> altaClient()
+            2 -> consultaPerPosicio()
+            3 -> consultaPerCodi()
+            4 -> modificarClient()
+            5 -> esborrarClient()
+            6 -> llistarClients()
+            98 -> esborrarFitxers()
+            99 -> generarDadesClients()
+            else -> println("Opció incorrecta")
+        }
+        opcio = menuClients()
+    }
+}
 
-    //Alta del cliente
-    var c: Client = Client()
-    c = pedirDatosCliente()
+fun menuClients() : Int{
+
+    println(
+        """
+        ** MENU CLIENTS **
+        1. Alta client
+        2. Consulta per posició
+        3. Consulta per codi
+        4. Modificar client
+        5. Esborrar client
+        6. Llistar clients
+        98. Esborrar fitxers
+        99. Generar dades de clients
+        0. Sortir
+    """.trimIndent()
+    )
+
+    return demanarOpcio()
+}
+
+fun demanarOpcio() : Int {
+    var scan = Scanner(System.`in`)
+    print("Introdueix opció: ")
+    return scan.nextInt()
+}
+
+fun altaClient() {
+    var c: Client = Client(false)
+    var f: Fichero = Fichero(FILE,binari=esBinari)
     c.guardar(f)
+    f.close()
+}
 
-
-    // Consulta per posició
+fun consultaPerPosicio() {
+    var scan = Scanner(System.`in`)
+    var f: Fichero = Fichero(FILE,binari=esBinari)
     print("Introdueix posició a consultar: ")
     var p = scan.nextInt()
+    var c: Client = Client(true)
     repeat(p) {
         c.leer(f)
     }
     println(c.toString())
+    f.close()
+}
 
-    //Consulta per codi
-    f = FicheroClientes(FILE_BIN, true)
+fun consultaPerCodi() {
+    var scan = Scanner(System.`in`)
+    var f: Fichero = Fichero(FILE, binari = esBinari)
     print("Introdueix codi a consultar: ")
     var codi = scan.nextInt()
-    c = Client()
+    var c: Client = Client(true)
+    c.leer(f)
     while (c.getCodi() != codi) {
         c.leer(f)
     }
     println(c.toString())
+    f.close()
+}
 
-    //Modificar client que hem trobat per codi
-    //var c2 = pedirDatosCliente()
-    var c2:Client = c.clonar()
-    c2.setNom( c2.getNom().trim() + "x")
+fun esborrarClient() {
+    copiarFitxer(true)
+}
 
-    var f2: FicheroClientes = FicheroClientes(FILE_BIN2, false)
-    f = FicheroClientes(FILE_BIN, false)
+fun modificarClient() {
+    copiarFitxer(false)
+}
+
+fun copiarFitxer(esborrar:Boolean) {
+    var scan = Scanner(System.`in`)
+    var f: Fichero = Fichero(FILE, binari = esBinari)
+    var accio : String = if (esborrar) "esborrar" else "modificar"
+    var f2: Fichero = Fichero(FILE2, binari = esBinari)
+    print("Introdueix codi a $accio :")
+    var codi = scan.nextInt()
+    var c: Client = Client(true)
     c.leer(f)
-    while (c.getCodi() != codi) {
+    while (c.getCodi() != codi && !f.eof) {
         c.guardar(f2)
         c.leer(f)
     }
-    c2.guardar(f2)
+    //Demanar les dades del client, si cal
+    if (!esborrar && !f.eof) {
+        var c2: Client = Client(false)
+        //Guardar los datos del cliente
+        c2.guardar(f2)
+    }
+    //Leer el resto de clientes
     c.leer(f)
-    while (c.getNom() != "") {
+    while (!f.eof) {
         c.guardar(f2)
         c.leer(f)
     }
 
-    var f1= File("FicheroClientes.txt")
+    f.close()
+    f2.close()
+    renombrarFicheros(FILE, FILE2)
+}
+
+fun renombrarFicheros(nom1: String, nom2: String) {
+    var f1 = File(nom1)
     f1.delete()
-    var f12 = File("./FicheroClientes2.txt")
-    f12.renameTo(File("FicheroClientes.txt"))
+    var f2 = File(nom2)
+    f2.renameTo(f1)
+}
 
+fun llistarClients() {
     //Listar clientes
     println("** Llistat de clients ***")
-    f = FicheroClientes("FicheroClientes.txt", false)
+    var f :  Fichero = Fichero(FILE, binari = esBinari)
+    var c: Client = Client(true)
     c.leer(f)
     while (c.getNom() != "") {
         println(c.toString())
         c.leer(f)
     }
-
+    f.close()
 }
 
+fun esborrarFitxers() {
+    var f1 = File(FILE)
+    f1.delete()
+    var f2 = File(FILE2)
+    f2.delete()
+}
 
-fun pedirDatosCliente() : Client {
-    var scan : Scanner = Scanner (System.`in`)
+fun generarDadesClients() {
+    var c1 = Client(111, "Primer", "Primera", 1, 1, 2001, "C/ Major, 11", "111@gmail.com", false)
+    var c2 = Client(222, "Segon", "Segona", 2, 2, 2002, "C/ Pi, 222", "222@gmail.com", true)
+    var c3 = Client(333, "Tercer", "Tercera", 3, 3, 2003, "C/ Moli, 333", "333@gmail.com", false)
+    var c4 = Client(444, "Quart", "Quarta", 4, 4, 2004, "C/ Baix, 444", "444@gmail.com", true)
+    var c5 = Client(555, "Cinque", "Cinquena", 5, 5, 2005, "C/ Dalt, 555", "555@gmail.com", false)
 
-    var codi: Int
-    var nom: String
-    var cognoms: String
-    var diaNaixement: Int
-    var mesNaixement: Int
-    var anyNaixement: Int
-    var adreçaPostal: String
-    var eMail: String
-    var esVIP: Boolean
+    var f: Fichero = Fichero(FILE, binari = esBinari)
+    c1.guardar(f)
+    c2.guardar(f)
+    c3.guardar(f)
+    c4.guardar(f)
+    c5.guardar(f)
 
-    print("Codi:"); codi = scan.nextInt(); scan.nextLine()
-    print("Nom:"); nom = scan.nextLine()
-    print("Cognoms:"); cognoms = scan.nextLine()
-    print("diaNaixement:"); diaNaixement = scan.nextInt(); scan.nextLine()
-    print("mesNaixement:"); mesNaixement = scan.nextInt(); scan.nextLine()
-    print("anyNaixement:"); anyNaixement = scan.nextInt(); scan.nextLine()
-    print("AdreçaPostal:"); adreçaPostal = scan.nextLine()
-    print("eMail:"); eMail = scan.nextLine()
-    print("esVIP:"); esVIP = (scan.nextLine() == "S")
-
-    return Client(codi, nom, cognoms, diaNaixement, mesNaixement, anyNaixement, adreçaPostal, eMail, esVIP)
+    f.close()
 }
