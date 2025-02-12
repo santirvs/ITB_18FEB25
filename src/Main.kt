@@ -7,10 +7,10 @@ const val FILE_BIN = "FicheroClientes.dat"
 const val FILE_TXT2 = "FicheroClientes2.txt"
 const val FILE_BIN2 = "FicheroClientes2.dat"
 
-const val FILE= FILE_BIN
-const val FILE2= FILE_BIN2
+const val FILE= FILE_TXT
+const val FILE2= FILE_TXT2
 
-const val esBinari = true
+const val esBinari = false
 
 fun main() {
 

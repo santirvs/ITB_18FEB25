@@ -42,7 +42,7 @@ class Fichero {
             this.dis = DataInputStream(fis)
         }
         else {
-            //Crear los objetos de acceso a ficheros de
+            //Crear los objetos de acceso a ficheros de text
             this.fw = FileWriter(file, append)
             this.pw = PrintWriter(fw)
 
