@@ -4,13 +4,13 @@ import java.util.*
 
 const val FILE_TXT = "FicheroClientes.txt"
 const val FILE_BIN = "FicheroClientes.dat"
-const val FILE_TXT2 = "FicheroClientes2.txt"
-const val FILE_BIN2 = "FicheroClientes2.dat"
+const val FILE_RAF = "FicheroClientes.raf"
+const val FILE_RAF_IDX = "FicheroClientes.idx"
+const val FILE_COPY = "_copia"
 
-const val FILE= FILE_TXT
-const val FILE2= FILE_TXT2
-
-const val esBinari = false
+val FILE:String = FILE_RAF
+val INDEX:String =FILE_RAF_IDX
+val modeFitxer : FileModes  = FileModes.RANDOM_ACCESS_MODE
 
 fun main() {
 
@@ -59,14 +59,14 @@ fun demanarOpcio() : Int {
 
 fun altaClient() {
     var c: Client = Client(false)
-    var f: Fichero = Fichero(FILE,binari=esBinari)
+    var f: Fichero = Fichero(FILE,mode=modeFitxer)
     c.guardar(f)
     f.close()
 }
 
 fun consultaPerPosicio() {
     var scan = Scanner(System.`in`)
-    var f: Fichero = Fichero(FILE,binari=esBinari)
+    var f: Fichero = Fichero(FILE,mode=modeFitxer)
     print("Introdueix posició a consultar: ")
     var p = scan.nextInt()
     var c: Client = Client(true)
@@ -79,7 +79,7 @@ fun consultaPerPosicio() {
 
 fun consultaPerCodi() {
     var scan = Scanner(System.`in`)
-    var f: Fichero = Fichero(FILE, binari = esBinari)
+    var f: Fichero = Fichero(FILE, mode=modeFitxer)
     print("Introdueix codi a consultar: ")
     var codi = scan.nextInt()
     var c: Client = Client(true)
@@ -101,9 +101,9 @@ fun modificarClient() {
 
 fun copiarFitxer(esborrar:Boolean) {
     var scan = Scanner(System.`in`)
-    var f: Fichero = Fichero(FILE, binari = esBinari)
+    var f: Fichero = Fichero(FILE, mode=modeFitxer)
     var accio : String = if (esborrar) "esborrar" else "modificar"
-    var f2: Fichero = Fichero(FILE2, binari = esBinari)
+    var f2: Fichero = Fichero(FILE2, mode=modeFitxer)
     print("Introdueix codi a $accio :")
     var codi = scan.nextInt()
     var c: Client = Client(true)
@@ -140,7 +140,7 @@ fun renombrarFicheros(nom1: String, nom2: String) {
 fun llistarClients() {
     //Listar clientes
     println("** Llistat de clients ***")
-    var f :  Fichero = Fichero(FILE, binari = esBinari)
+    var f :  Fichero = Fichero(FILE, mode=modeFitxer)
     var c: Client = Client(true)
     c.leer(f)
     while (c.getNom() != "") {
@@ -164,7 +164,7 @@ fun generarDadesClients() {
     var c4 = Client(444, "Quart", "Quarta", 4, 4, 2004, "C/ Baix, 444", "444@gmail.com", true)
     var c5 = Client(555, "Cinque", "Cinquena", 5, 5, 2005, "C/ Dalt, 555", "555@gmail.com", false)
 
-    var f: Fichero = Fichero(FILE, binari = esBinari)
+    var f: Fichero = Fichero(FILE, mode=modeFitxer)
     c1.guardar(f)
     c2.guardar(f)
     c3.guardar(f)

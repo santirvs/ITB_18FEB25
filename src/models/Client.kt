@@ -86,10 +86,13 @@ class Client : IGuardable, Cloneable {
     //Overrides de IGuardable
 
     override fun guardar(f: Fichero) {
-        if (f.getEsBinari())
-            guardarBinario(f)
-        else
-            guardarTexto(f)
+
+        when (f.getMode()) {
+            FileModes.TEXT_MODE -> guardarTexto(f)
+            FileModes.BINARY_MODE -> guardarBinario(f)
+            FileModes.RANDOM_ACCESS_MODE -> guardarDirecto(f)
+        }
+
     }
     private fun guardarTexto(f: Fichero) {
 
@@ -125,12 +128,26 @@ class Client : IGuardable, Cloneable {
         f.getDos()!!.flush()
     }
 
-    override fun leer(f: Fichero) {
-        if (f.getEsBinari())
-            leerBinario(f)
-        else
-            leerTexto(f)
+    private fun guardarDirecto(f: Fichero) {
+        f.getRaf()!!.writeInt(codi)
+        f.getRaf()!!.writeUTF(nom)
+        f.getRaf()!!.writeUTF(cognoms)
+        f.getRaf()!!.writeInt(diaNaixement)
+        f.getRaf()!!.writeInt(mesNaixement)
+        f.getRaf()!!.writeInt(anyNaixement)
+        f.getRaf()!!.writeUTF(adrecaPostal)
+        f.getRaf()!!.writeUTF(eMail)
+        f.getRaf()!!.writeBoolean(esVIP)
     }
+
+    override fun leer(f: Fichero) {
+        when (f.getMode()) {
+            FileModes.TEXT_MODE -> leerTexto(f)
+            FileModes.BINARY_MODE -> leerBinario(f)
+            FileModes.RANDOM_ACCESS_MODE -> leerDirecto(f)
+        }
+    }
+
     private fun leerTexto(f: Fichero) {
         var fos : FileReader = f.getFr()!!
         var dos : BufferedReader = f.getBr()!!
@@ -178,6 +195,26 @@ class Client : IGuardable, Cloneable {
 
     }
 
+    private fun leerDirecto(f: Fichero) {
+        var raf: RandomAccessFile = f.getRaf()!!
+
+        try {
+            codi = raf.readInt()
+            nom = raf.readUTF()
+            cognoms = raf.readUTF()
+            diaNaixement = raf.readInt()
+            mesNaixement = raf.readInt()
+            anyNaixement = raf.readInt()
+            adrecaPostal = raf.readUTF()
+            eMail = raf.readUTF()
+            esVIP = raf.readBoolean()
+        } catch (e: Exception) {
+            // Control cutre de excepción por final de fichero
+            nom = ""
+            f.eof = true
+        }
+
+    }
 
     // Overrides de Cloneable
 
