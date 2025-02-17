@@ -5,11 +5,9 @@ import java.util.*
 const val FILE_TXT = "FicheroClientes.txt"
 const val FILE_BIN = "FicheroClientes.dat"
 const val FILE_RAF = "FicheroClientes.raf"
-const val FILE_RAF_IDX = "FicheroClientes.idx"
 const val FILE_COPY = "_copia"
 
 val FILE:String = FILE_RAF
-val INDEX:String =FILE_RAF_IDX
 val modeFitxer : FileModes  = FileModes.RANDOM_ACCESS_MODE
 
 fun main() {
@@ -70,10 +68,13 @@ fun consultaPerPosicio() {
     print("Introdueix posició a consultar: ")
     var p = scan.nextInt()
     var c: Client = Client(true)
-    repeat(p) {
-        c.leer(f)
+    c.leerPosicion(f,p)
+    if (c.getNom()!="") {
+        println(c.toString())
     }
-    println(c.toString())
+    else {
+        println("No s'ha trobat el client")
+    }
     f.close()
 }
 
@@ -83,11 +84,13 @@ fun consultaPerCodi() {
     print("Introdueix codi a consultar: ")
     var codi = scan.nextInt()
     var c: Client = Client(true)
-    c.leer(f)
-    while (c.getCodi() != codi) {
-        c.leer(f)
+    c.leerCodigo(f,codi)
+    if (c.getNom()!="") {
+        println(c.toString())
     }
-    println(c.toString())
+    else {
+        println("No s'ha trobat el client")
+    }
     f.close()
 }
 
@@ -103,9 +106,21 @@ fun copiarFitxer(esborrar:Boolean) {
     var scan = Scanner(System.`in`)
     var f: Fichero = Fichero(FILE, mode=modeFitxer)
     var accio : String = if (esborrar) "esborrar" else "modificar"
-    var f2: Fichero = Fichero(FILE2, mode=modeFitxer)
     print("Introdueix codi a $accio :")
     var codi = scan.nextInt()
+
+    if (modeFitxer == FileModes.RANDOM_ACCESS_MODE) {
+        var c:Client = Client(esborrar)
+        c.modificarDirecte(f, codi, esborrar)
+    } else {
+        copiarFitxerNoDirecte(f, codi, esborrar)
+    }
+
+}
+
+
+fun copiarFitxerNoDirecte(f:Fichero, codi:Int, esborrar:Boolean) {
+    var f2: Fichero = Fichero(FILE+FILE_COPY, mode=modeFitxer)
     var c: Client = Client(true)
     c.leer(f)
     while (c.getCodi() != codi && !f.eof) {
@@ -127,7 +142,7 @@ fun copiarFitxer(esborrar:Boolean) {
 
     f.close()
     f2.close()
-    renombrarFicheros(FILE, FILE2)
+    renombrarFicheros(FILE, FILE+FILE_COPY)
 }
 
 fun renombrarFicheros(nom1: String, nom2: String) {
@@ -153,7 +168,7 @@ fun llistarClients() {
 fun esborrarFitxers() {
     var f1 = File(FILE)
     f1.delete()
-    var f2 = File(FILE2)
+    var f2 = File(FILE+FILE_COPY)
     f2.delete()
 }
 

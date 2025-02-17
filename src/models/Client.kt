@@ -6,6 +6,7 @@ import java.io.*
 import java.util.*
 
 class Client : IGuardable, Cloneable {
+    private var esborrat: Boolean = false
     private var codi: Int = 0
     private var nom: String = ""
     private var cognoms: String = ""
@@ -129,6 +130,13 @@ class Client : IGuardable, Cloneable {
     }
 
     private fun guardarDirecto(f: Fichero) {
+
+        //Posición al final del fichero
+        val posicion : Long  = f.getRaf()!!.length()
+        f.getRaf()!!.seek(posicion)
+
+        //Guardar los datos del cliente
+        f.getRaf()!!.writeBoolean(esborrat)
         f.getRaf()!!.writeInt(codi)
         f.getRaf()!!.writeUTF(nom)
         f.getRaf()!!.writeUTF(cognoms)
@@ -138,6 +146,89 @@ class Client : IGuardable, Cloneable {
         f.getRaf()!!.writeUTF(adrecaPostal)
         f.getRaf()!!.writeUTF(eMail)
         f.getRaf()!!.writeBoolean(esVIP)
+
+        //Guardar los datos en el fichero índice
+        var rafIdx : RandomAccessFile = RandomAccessFile(f.getNomFitxer()+".idx", "rw")
+        rafIdx.seek(rafIdx.length())
+        rafIdx.writeInt(codi)
+        rafIdx.writeLong(posicion)
+        rafIdx.close()
+
+    }
+
+    fun leerPosicion(f: Fichero, pos: Int) {
+
+        if (f.getMode() == FileModes.RANDOM_ACCESS_MODE) {
+          leerPosicionDirecto(f, pos)
+        }
+        else {
+            repeat(pos) {
+                leer(f)
+            }
+        }
+    }
+
+    private fun leerPosicionDirecto(f: Fichero, pos: Int) {
+        //Obrir el fitxer d'índex
+        var rafIdx : RandomAccessFile = RandomAccessFile(f.getNomFitxer()+".idx", "r")
+        rafIdx.seek(0)
+        var posicio : Long
+        var trobat : Boolean = false
+        var contador : Int = 1
+        //Recòrrer el fitxer d'índex fins a trobar la posició  (cal vigilar que no es superi el final del fitxer)
+        while (!trobat && rafIdx.filePointer < rafIdx.length()) {
+            rafIdx.readInt()  //Ignorem el codi
+            posicio = rafIdx.readLong()
+            if (contador == pos) {
+                //Accedir al fitxer de dades a la posició indicada
+                f.getRaf()!!.seek(posicio)
+                leer(f)
+                trobat = true
+            }
+            contador++
+        }
+        if (!trobat) {
+            nom = ""
+        }
+        rafIdx.close()
+    }
+
+    fun leerCodigo(f: Fichero, codi: Int) {
+        var trobat:Boolean = false
+        if (f.getMode() == FileModes.RANDOM_ACCESS_MODE) {
+            while (!f.eof && !trobat) {
+                leer(f)
+                if (this.codi == codi) {
+                    trobat = true
+                }
+            }
+        }
+        else {
+            leerCodigoDirecto(f, codi)
+        }
+    }
+    private fun leerCodigoDirecto(f: Fichero, codiBuscat: Int) {
+        //Obrir el fitxer d'índex
+        var rafIdx : RandomAccessFile = RandomAccessFile(f.getNomFitxer()+".idx", "r")
+        rafIdx.seek(0)
+        var posicio : Long
+        var codi : Int
+        var trobat : Boolean = false
+        //Recòrrer el fitxer d'índex fins a trobar el codi  (cal vigilar que no es superi el final del fitxer)
+        while (!trobat && rafIdx.filePointer < rafIdx.length()) {
+            codi = rafIdx.readInt()
+            posicio = rafIdx.readLong()
+            if (codi == codiBuscat) {
+                //Accedir al fitxer de dades a la posició indicada
+                f.getRaf()!!.seek(posicio)
+                leer(f)
+                trobat = true
+            }
+        }
+        if (!trobat) {
+            nom = ""
+        }
+        rafIdx.close()
     }
 
     override fun leer(f: Fichero) {
@@ -199,6 +290,7 @@ class Client : IGuardable, Cloneable {
         var raf: RandomAccessFile = f.getRaf()!!
 
         try {
+            esborrat = raf.readBoolean()
             codi = raf.readInt()
             nom = raf.readUTF()
             cognoms = raf.readUTF()
@@ -208,12 +300,44 @@ class Client : IGuardable, Cloneable {
             adrecaPostal = raf.readUTF()
             eMail = raf.readUTF()
             esVIP = raf.readBoolean()
+
+            if (esborrat) {
+                nom = ""
+            }
         } catch (e: Exception) {
             // Control cutre de excepción por final de fichero
             nom = ""
             f.eof = true
         }
 
+    }
+
+    fun modificarDirecte(f: Fichero, codiBuscat: Int, esborrar: Boolean) {
+        var rafIdx : RandomAccessFile = RandomAccessFile(f.getNomFitxer()+".idx", "rw")
+        rafIdx.seek(0)
+        var posicio : Long
+        var codi : Int
+        var trobat : Boolean = false
+        //Recòrrer el fitxer d'índex fins a trobar el codi (cal vigilar que no es superi el final del fitxer)
+        while (!trobat && rafIdx.filePointer < rafIdx.length()) {
+            codi = rafIdx.readInt()
+            posicio = rafIdx.readLong()
+            if (codi == codiBuscat) {
+                //Accedir al fitxer de dades a la posició indicada
+                f.getRaf()!!.seek(posicio)
+                //Marcar la posició de dades com a esborrada
+                f.getRaf()!!.writeBoolean(true)
+                //Marcar l'índex com a esborrat
+                rafIdx.seek(rafIdx.filePointer-12)
+                rafIdx.writeInt(-1)
+                if (!esborrar) {
+                    //Guardar les dades del client
+                    guardarDirecto(f)
+                }
+                trobat = true
+            }
+        }
+        rafIdx.close()
     }
 
     // Overrides de Cloneable

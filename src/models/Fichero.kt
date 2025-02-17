@@ -3,6 +3,7 @@ package models
 import java.io.*
 
 class Fichero {
+    private var nomFitxer : String = ""
 
     private var file : File
     private var mode : FileModes = FileModes.TEXT_MODE
@@ -26,9 +27,12 @@ class Fichero {
     //** Accés directe
     private var raf : RandomAccessFile? = null
 
+
     public var eof: Boolean = false
 
     constructor(path: String, append:Boolean = true, mode:FileModes = FileModes.TEXT_MODE) {
+
+        this.nomFitxer = path
         this.file = File(path)
         this.mode = mode
 
@@ -44,7 +48,7 @@ class Fichero {
             this.fis = FileInputStream(file)
             this.dis = DataInputStream(fis)
         }
-        else if (mode == FileModes.RANDOM_ACCESS_MODE) {
+        else if (mode == FileModes.BINARY_MODE) {
             //Crear los objetos de acceso a ficheros de text
             this.fw = FileWriter(file, append)
             this.pw = PrintWriter(fw)
@@ -52,7 +56,7 @@ class Fichero {
             this.fr = FileReader(this.file)
             this.br = BufferedReader(this.fr)
         }
-        else if (mode == FileModes.BINARY_MODE) {
+        else if (mode == FileModes.RANDOM_ACCESS_MODE) {
             this.raf = RandomAccessFile(file, "rw")
         }
 
@@ -93,6 +97,10 @@ class Fichero {
 
     fun getMode() : FileModes {
         return mode
+    }
+
+    fun getNomFitxer() : String {
+        return nomFitxer
     }
 
     fun close() {
