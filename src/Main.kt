@@ -1,13 +1,13 @@
 import models.*
 import java.io.File
+import java.io.RandomAccessFile
 import java.util.*
 
 const val FILE_TXT = "FicheroClientes.txt"
 const val FILE_BIN = "FicheroClientes.dat"
-const val FILE_RAF = "FicheroClientes.raf"
 const val FILE_COPY = "_copia"
 
-val FILE:String = FILE_RAF
+val FILE:String = FILE_BIN
 val modeFitxer : FileModes  = FileModes.RANDOM_ACCESS_MODE
 
 fun main() {
@@ -153,6 +153,47 @@ fun renombrarFicheros(nom1: String, nom2: String) {
 }
 
 fun llistarClients() {
+
+    if (modeFitxer == FileModes.RANDOM_ACCESS_MODE) {
+        llistarClientsDirecte()
+    } else {
+        llistarClientsNoDirecte()
+    }
+}
+
+fun llistarClientsDirecte() {
+    //Listar clientes
+    println("** Llistat de clients ***")
+    val index : MutableList<IndexEntry> = mutableListOf()
+    val indexFile:RandomAccessFile = RandomAccessFile(FILE + ".idx", "r")
+    val f: Fichero = Fichero(FILE, mode=modeFitxer)
+
+    while (indexFile.length() > indexFile.filePointer) {
+        var codi = indexFile.readInt()
+        var posicio = indexFile.readLong()
+        if (codi != -1) {
+            //Entrada de l'index no esborrada
+            index.add(IndexEntry(codi, posicio))
+        }
+    }
+
+    //Ordenació dels indexos
+    index.sortBy { it.codi }
+
+    //Recorrer els indexos per mostrar els clients
+    var c: Client = Client(true)
+    for (i in index) {
+        f.getRaf()!!.seek(i.posicio)
+        c.leer(f)
+        println(c.toString())
+    }
+
+    f.close()
+    indexFile.close()
+}
+
+
+fun llistarClientsNoDirecte() {
     //Listar clientes
     println("** Llistat de clients ***")
     var f :  Fichero = Fichero(FILE, mode=modeFitxer)
@@ -170,6 +211,8 @@ fun esborrarFitxers() {
     f1.delete()
     var f2 = File(FILE+FILE_COPY)
     f2.delete()
+    var f3 = File(FILE + ".idx")
+    f3.delete()
 }
 
 fun generarDadesClients() {
